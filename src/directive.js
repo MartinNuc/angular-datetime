@@ -423,6 +423,8 @@ angular.module("datetime").directive("datetime", function(datetime, $log, $docum
 								selectRange(errorRange);
 							}
 							break;
+						case 189: // -
+						case 190: // .
 						case 39:
 							// Right
 							e.preventDefault();
