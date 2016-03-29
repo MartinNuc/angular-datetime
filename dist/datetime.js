@@ -184,7 +184,7 @@ angular.module("datetime").factory("datetime", ["$locale", function($locale){
 		"Z": {
 			name: "timezone",
 			type: "regex",
-			regex: /[+-]\d{4}/
+			regex: /[+-]\d{2}:?\d{2}/
 		},
 		"string": {
 			name: "string",
@@ -339,7 +339,7 @@ angular.module("datetime").factory("datetime", ["$locale", function($locale){
 				node.value = getWeek(date);
 				break;
 			case "timezone":
-				node.value = (date.getTimezoneOffset() > 0 ? "-" : "+") + num2str(Math.abs(date.getTimezoneOffset() / 60), 2, 2) + "00";
+				node.value = (date.getTimezoneOffset() > 0 ? "-" : "+") + num2str(Math.abs(date.getTimezoneOffset() / 60), 2, 2) + ":00";
 				break;
 		}
 
@@ -559,7 +559,7 @@ angular.module("datetime").factory("datetime", ["$locale", function($locale){
 				break;
 
 			case "regex":
-				m = p.regex.exec(text.substr(pos));
+				m = node.token.regex.exec(text.substr(pos));
 				if (!m || m.index != 0) {
 					throw {
 						code: "REGEX_MISMATCH",
@@ -1130,6 +1130,8 @@ angular.module("datetime").directive("datetime", ["datetime", "$log", "$document
 								selectRange(errorRange);
 							}
 							break;
+						case 189: // -
+						case 190: // .
 						case 39:
 							// Right
 							e.preventDefault();
