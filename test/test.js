@@ -15,6 +15,38 @@ var formats = [
 	"Z"
 ];
 
+function jsKeydown(elementId, code){
+	var oEvent = document.createEvent('KeyboardEvent');
+
+	// Chromium Hack: filter this otherwise Safari will complain
+	if( navigator.userAgent.toLowerCase().indexOf('chrome') > -1 ){
+		Object.defineProperty(oEvent, 'keyCode', {
+			get : function() {
+				return this.keyCodeVal;
+			}
+		});
+		Object.defineProperty(oEvent, 'which', {
+			get : function() {
+				return this.keyCodeVal;
+			}
+		});
+	}
+
+	if (oEvent.initKeyboardEvent) {
+		oEvent.initKeyboardEvent("keydown", true, true, document.defaultView, false, false, false, false, code, code);
+	} else {
+		oEvent.initKeyEvent("keydown", true, true, document.defaultView, false, false, false, false, code, 0);
+	}
+
+	oEvent.keyCodeVal = code;
+
+	if (oEvent.keyCode !== code) {
+		console.log("keyCode mismatch " + oEvent.keyCode + "(" + oEvent.which + ") -> "+ code);
+	}
+
+	document.getElementById(elementId).dispatchEvent(oEvent);
+}
+
 function insertColon(timezone) {
 	if (timezone[3] == ":") {
 		return timezone;
@@ -270,4 +302,51 @@ describe("datetime directive", function(){
 		
 		expect(element.val()).toEqual($date(date, "medium"));
 	});
+
+	it("should jump to the next segment on separator press", function(){
+
+		var date = new Date();
+		$rootScope.date = new Date();
+		var element = $compile("<input id='datetime-input' type='text' >")($rootScope);
+
+		$rootScope.$digest();
+
+		var input = element.find('input');
+
+		input.triggerHandler('focus');
+		element.triggerHandler({
+			type: 'keydown',
+			which: 51
+		});
+
+		element.triggerHandler({
+			type: 'keypress',
+			which: 51
+		});
+
+		var replacementText = "3";
+		var sel, range;
+		if (window.getSelection) {
+			sel = window.getSelection();
+			console.log(sel)
+			if (sel.rangeCount) {
+				range = sel.getRangeAt(0);
+				range.deleteContents();
+				range.insertNode(document.createTextNode(replacementText));
+			}
+		} else if (document.selection && document.selection.createRange) {
+			range = document.selection.createRange();
+			range.text = replacementText;
+		}
+
+		element.triggerHandler({
+			type: 'keyup',
+			which: 51
+		});
+
+		date.setHours(3);
+		console.debug(element.val(), $date(date, "HH:mm:ss"));
+		expect(element.val()).toEqual($date(date, "HH:mm:ss"));
+	});
+
 });
